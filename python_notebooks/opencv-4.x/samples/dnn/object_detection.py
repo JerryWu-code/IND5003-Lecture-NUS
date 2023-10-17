@@ -181,7 +181,7 @@ def postprocess(frame, outs):
             conf = confidences[class_indices]
             box  = boxes[class_indices].tolist()
             nms_indices = cv.dnn.NMSBoxes(box, conf, confThreshold, nmsThreshold)
-            nms_indices = nms_indices[:, 0] if len(nms_indices) else []
+            nms_indices = nms_indices[:] if len(nms_indices) else []
             indices.extend(class_indices[nms_indices])
     else:
         indices = np.arange(0, len(classIds))
@@ -282,7 +282,7 @@ def processingThreadBody():
                 futureOutputs.append(net.forwardAsync())
             else:
                 outs = net.forward(outNames)
-                predictionsQueue.put(np.copy(outs))
+                predictionsQueue.put(outs)
 
         while futureOutputs and futureOutputs[0].wait_for(0):
             out = futureOutputs[0].get()

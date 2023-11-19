@@ -3,14 +3,15 @@ import cv2 as cv
 from IPython.core.debugger import set_trace
 
 def postprocess(frame, outs, classes, yolo):
-    confThreshold = 0.5
-    nmsThreshold = 0.4
+    confThreshold = 0.45
+    nmsThreshold = 0.8
     frameHeight = frame.shape[0]
     frameWidth = frame.shape[1]
 
+    drawn_boxes = []
     def drawPred(classId, conf, left, top, right, bottom):
         # Draw a bounding box.
-        cv.rectangle(frame, (left, top), (right, bottom), (0, 255, 0))
+        cv.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), thickness=5)
 
         label = '%.2f' % conf
 
@@ -19,10 +20,23 @@ def postprocess(frame, outs, classes, yolo):
             assert(classId < len(classes))
             label = '%s: %s' % (classes[classId], label)
 
-        labelSize, baseLine = cv.getTextSize(label, cv.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-        top = max(top, labelSize[1])
-        cv.rectangle(frame, (left, top - labelSize[1]), (left + labelSize[0], top + baseLine), (255, 255, 255), cv.FILLED)
-        cv.putText(frame, label, (left, top), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
+        labelSize, baseLine = cv.getTextSize(label, cv.FONT_HERSHEY_SIMPLEX, 2.5, 1)
+
+        label_top = max(top, labelSize[1])
+        label_bottom = label_top + labelSize[1] + baseLine
+        label_left = left
+        label_right = left + labelSize[0]
+
+        overlap_offset = 500
+        for box in drawn_boxes:
+            if (box[0] < label_right and box[2] > label_left and
+                box[1] < label_bottom and box[3] > label_top):
+                label_top = box[3] + overlap_offset
+
+        drawn_boxes.append([label_left, label_top, label_right, label_bottom])
+
+        cv.rectangle(frame, (label_left, label_top - labelSize[1]), (label_right, label_top + baseLine), (255, 255, 255), cv.FILLED)
+        cv.putText(frame, label, (label_left, label_top), cv.FONT_HERSHEY_SIMPLEX, 2.5, (0, 0, 0), thickness=5)
 
     layerNames = yolo.getLayerNames()
     lastLayerId = yolo.getLayerId(layerNames[-1])

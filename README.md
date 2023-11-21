@@ -1,4 +1,4 @@
-# IND5003-Lecture-NUS
+# IND5003-Lecture-NUS-2023/24
 - **Course-ID**: IND5003
 - **Semester**: AY2023-2024
 - **Course-Name**: Data Analytics for Decision Making
